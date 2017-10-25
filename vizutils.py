@@ -6,13 +6,13 @@ def __ensure3_channels(image):
     return np.dstack((image, image, image)) if len(image.shape) == 2 else image
 
 
-def overlay_lane_lines(image, left_coors, right_coors, line_width=60, overlay_weight=0.3):
+def overlay_lane_lines(image, left_coors, right_coors, line_width=2, overlay_weight=1):
     out_image = __ensure3_channels(image)
     overlay_image = np.zeros_like(out_image)
 
-    cv2.polylines(overlay_image, [left_coors], False, (255, 255, 0),
+    cv2.polylines(overlay_image, [left_coors], False, (0, 255, 255),
                   thickness=line_width, lineType=cv2.LINE_AA)
-    cv2.polylines(overlay_image, [right_coors], False, (255, 0, 255),
+    cv2.polylines(overlay_image, [right_coors], False, (0, 255, 255),
                   thickness=line_width, lineType=cv2.LINE_AA)
 
     return cv2.addWeighted(out_image, 1, overlay_image, overlay_weight, 0)

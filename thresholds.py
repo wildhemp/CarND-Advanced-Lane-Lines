@@ -22,19 +22,31 @@ class Threshold:
         binary = None
 
         steps = (2, 2, 1, 7)
-        for phase, step in product(range(2), range(11)):
-            binary = np.zeros_like(hsv[:, :, 0])
-            binary[((clahe.apply(hsv[:, :, 2]) > 200 + step * steps[0]) &
-                    (hls[:, :, 1] > 180 + step * steps[0]))] = 1
-            binary[((hsv[:, :, 1] < 30) & (hls[:, :, 1] > 190 + phase * step * steps[1]))] = 1
-            binary[(clahe.apply(luv[:, :, 2]) > 160 + step * steps[2])] = 1
-            binary[(clahe.apply(hls[:, :, 2]) > 50) & (hls[:, :, 1] > 120 + step * steps[3])] = 1
+        best_binary = None
+        best_score = 0
+        for phase in range(2):
+            for step in range(15):
+                binary = np.zeros_like(hsv[:, :, 0])
+                binary[((clahe.apply(hsv[:, :, 2]) > 200 + step * steps[0]) &
+                        (hls[:, :, 1] > 180 + step * steps[0]))] = 1
+                binary[((hsv[:, :, 1] < 30) & (hls[:, :, 1] > 190 + phase * step * steps[1]))] = 1
+                binary[(clahe.apply(luv[:, :, 2]) > 160 + step * steps[2])] = 1
+                binary[(clahe.apply(hls[:, :, 2]) > 50) & (hls[:, :, 1] > 120 + step * steps[3])] = 1
 
-            if np.average(np.sum(binary[binary.shape[0] // 2:, :], axis=0)) < 23:
-                break
+                # score = np.average(np.sum(binary[binary.shape[0] // 2:, :], axis=0))
+                # if 25 > score > best_score:
+                #     best_score = score
+                #     best_binary = binary
+                #     break
+                score_1 = np.average(np.sum(binary[binary.shape[0] // 2:binary.shape[0] // 4 * 3, :], axis=0))
+                score_2 = np.average(np.sum(binary[binary.shape[0] // 4 * 3:, :], axis=0))
+                if 19 > score_1 and 19 > score_2 and score_1 + score_2 > best_score:
+                    best_score = score_1 + score_2
+                    best_binary = binary
+                    break
 
-        # print(np.average(np.sum(binary[binary.shape[0]//2:,:], axis=0)))
-        return binary
+
+        return binary if best_binary is None else best_binary
 
     def threshold(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -79,8 +91,8 @@ def test_threshold_values(path):
 
 
 if __name__ == '__main__':
-    path = './debug_images/frame350.png'
-    # path = './test_images/straight_lines2.jpg'
+    # path = './test_images/test1.jpg'
+    path = './debug_images_2/frame147.png'
     show_color_channels(path)
     test_threshold_values(path)
     cv2.waitKey(0)

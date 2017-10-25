@@ -11,17 +11,31 @@ import functools
 
 
 def test_calibrated_camera(camera):
+    '''
+    Tests the camera calibration and displays undistorted image.
+
+    :param camera: the calibrated camera
+    '''
     img = cv2.imread('./camera_cal/calibration1.jpg')
     cv2.imshow('img', camera.undistort(img))
     cv2.waitKey(0)
 
 
-def process_image(camera, threshold, lane_finder, image):
+def process_image(camera, thresholder, lane_finder, image):
+    '''
+    Finds the lane lines and the lane and produces an image which has the original image overalyed with the lane and the
+    lane lines and also having the bords eye view and threshold images added as a pip.
+
+    :param camera: the calibrated camera
+    :param thresholder: the thresholder to use for creating the binary image
+    :param lane_finder: the lane finder
+    :param image: the image to find the lane on
+    :return: the resulting image with overlays and pip images
+    '''
     undistorted = camera.undistort(image)
     warped = camera.warp(undistorted)
 
-    binary = threshold.threshold(undistorted)
-
+    binary = thresholder.threshold(undistorted)
     binary_warped = camera.warp(binary)
 
     left_line, right_line = lane_finder.find_lanes(binary_warped)
@@ -29,9 +43,9 @@ def process_image(camera, threshold, lane_finder, image):
     position = lane_finder.calculate_position()
     window_pos = np.concatenate((left_line.window_coordinates(), right_line.window_coordinates()))
 
-    warped_overlayed = warped #vizutils.overlay_lane_lines(warped, left_coors, right_coors)
-    # binary_warped_overlayed = vizutils.overlay_lane_lines(binary_warped, left_coors, right_coors)
+    warped_overlayed = warped
     binary_warped_overlayed = vizutils.overlay_windows(binary_warped, window_pos, camera)
+    binary_warped_overlayed = vizutils.overlay_lane_lines(binary_warped_overlayed, left_coors, right_coors)
 
     text_start_y = image.shape[0] // 3
 

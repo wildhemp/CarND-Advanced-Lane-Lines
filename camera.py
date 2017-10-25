@@ -6,8 +6,8 @@ import cv2
 class Camera:
 
     def __init__(self, nx, ny,
-                 # lane_coordinates=((584, 458), (701, 458), (295, 665), (1022, 665)),
-                 lane_coordinates=((584, 474), (701, 474), (295, 665), (1022, 665)),
+                 lane_coordinates=((584, 458), (701, 458), (295, 665), (1022, 665)),
+                 # lane_coordinates=((584, 474), (701, 474), (295, 665), (1022, 665)),
                  path='./camera_cal'):
         self.nx = nx
         self.ny = ny

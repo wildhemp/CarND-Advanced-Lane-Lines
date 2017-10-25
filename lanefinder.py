@@ -22,7 +22,7 @@ class LaneFinder:
         self.__right_line = Line(image_size, windows[:,1])
 
     def __histogram(self, binary_warped):
-        return np.sum(binary_warped[binary_warped.shape[0] // 2:, :], axis=0)
+        return np.sum(binary_warped[binary_warped.shape[0] // 3:, :], axis=0)
 
     def show_histogram(self, binary_warped):
         histogram = self.__histogram(binary_warped)
@@ -43,8 +43,8 @@ class LaneFinder:
         if right_search_center == middle:
             right_search_center = middle // 2 + middle
 
-        self.__left_line.update(binary_warped, left_search_center)
-        self.__right_line.update(binary_warped, right_search_center)
+        self.__left_line.update(binary_warped, left_search_center, self.__margin)
+        self.__right_line.update(binary_warped, right_search_center, self.__margin)
 
         return self.__left_line, self.__right_line
 
