@@ -1,6 +1,7 @@
 import numpy as np
 
 
+
 class Line:
     '''
     Class to handle line related concepts. It can find the line on the image provided and provides tracking on
@@ -12,8 +13,9 @@ class Line:
         self.__windows = windows
         self.__x_coors = None
         self.__y_coors = None
-        self.__ym_per_pix = 3.048 / 80  # meters per pixel in y dimension
-        self.__xm_per_pix = 3.7 / 690  # meters per pixel in x dimension
+        self.__ym_per_pix = 30 / 720  # meters per pixel in y dimension
+        self.__xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
+        self.__max_num_invalid_frames = 5
         self.__curr_fit = None
         self.__last_valid_fit = None
         self.__num_invalid_frames = 0
@@ -79,10 +81,6 @@ class Line:
         # ... and if it's not a valid fit, then discard it.
         self.set_valid(self.__is_valid_line() and self.__is_valid_poly())
 
-        # fit = self.fit()
-        #
-        # self.__debug_text = ' {},{} '.format(int(fit[2]), int(fit[0] * 720 ** 2 + fit[1] * 720))
-
     def set_valid(self, is_valid):
         if is_valid == (self.__curr_fit is not None):
             return
@@ -108,10 +106,10 @@ class Line:
                     prev_line = prev_fit[0] * (y_center**2) + prev_fit[1] * y_center + prev_fit[2]
                     margins = np.int32([prev_line - window.width, prev_line + window.width])
                     inliers = points[0][((points[0] >= margins[0]) & (points[0] < margins[1]))]
-                    # if i == 0:
-                    #     self.__debug_text += 'm:{},{},{},{},{},{}'.format(
-                    #         margins[0], margins[1],len(inliers), len(points[0]), np.min(points[0]), np.max(points[0]))
-                    if len(inliers) / len(points[0]) < .6:
+                    if i == 0:
+                        self.__debug_text += 'm:{},{},{},{},{},{}'.format(
+                            margins[0], margins[1],len(inliers), len(points[0]), np.min(points[0]), np.max(points[0]))
+                    if len(inliers) / len(points[0]) < .8:
                         self.__debug_text += ' iw: %d '% i
                         window.set_valid(False)
 
@@ -120,14 +118,14 @@ class Line:
         Checks if the polynomial is valid or not.
         :return: False if it is invalid, True otherwise.
         '''
-        # prev_fit = self.last_valid_fit
-        # current_fit = self.curr_fit
-        # if prev_fit is not None and current_fit is not None:
-        #     self.__debug_text += 'Fit Diff: {:>.6f}'.format(
-        #         np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)))
-        #     if np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)) > .0005:
-        #         self.__debug_text += ' Skipping frame'
-        #         return False
+        prev_fit = self.__prev_fit()
+        current_fit = self.__curr_fit
+        if prev_fit is not None and current_fit is not None:
+            self.__debug_text += 'Fit Diff: {:>.6f}'.format(
+                np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)))
+            if np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)) > .0005:
+                self.__debug_text += ' Skipping frame'
+                return False
 
         return True
 
@@ -199,18 +197,33 @@ class Line:
         return window_positions
 
     def fit(self, force_last_valid_fit=True):
+        '''
+        Returns the best fit for the line.that is it returns either the current one if valid or the prev one if valid.
+        If force_last_valid_fit is set to true, it returns the last valid fit even if num_invalid_frames is outside of
+        the threshold.
+        :param force_last_valid_fit: Whether to return the last valid fit regardless of the num_invalid_frames threshold
+            being reached or not
+        :return: the best fit.
+        '''
         if self.__curr_fit is not None:
             return self.__curr_fit
-        elif force_last_valid_fit or self.__num_invalid_frames <= 5:
+        elif force_last_valid_fit or self.__num_invalid_frames <= self.__max_num_invalid_frames:
             return self.__last_valid_fit
 
         return None
 
     def __prev_fit(self):
-        if self.__last_valid_fit is not None and self.__num_invalid_frames <=5:
+        '''
+        The previous valid fit if set and if the num_invalid_frames threshold is not reached.
+        :return:
+        '''
+        if self.__last_valid_fit is not None and self.__num_invalid_frames <= self.__max_num_invalid_frames:
             return self.__last_valid_fit
 
         return None
 
     def debug_text(self):
+        '''
+        :return: Some debugging information.
+        '''
         return self.__debug_text

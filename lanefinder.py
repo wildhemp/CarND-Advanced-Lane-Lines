@@ -1,10 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from line import Line
 from window import Window
 
 
 class LaneFinder:
+    '''
+    Encapsulates the lane finding logic.
+    '''
 
     def __init__(self, image_size=(720, 1280)):
         self.__image_size = image_size
@@ -21,16 +23,23 @@ class LaneFinder:
         self.__left_line = Line(image_size, windows[:,0])
         self.__right_line = Line(image_size, windows[:,1])
 
-    def __histogram(self, binary_warped):
+    def histogram(self, binary_warped):
+        '''
+        Returns a simple histogram of the bottom 3rd of the given binary image.
+        '''
         return np.sum(binary_warped[binary_warped.shape[0] // 3:, :], axis=0)
 
-    def show_histogram(self, binary_warped):
-        histogram = self.__histogram(binary_warped)
-        plt.plot(histogram)
-        plt.show()
-
     def find_lanes(self, binary_warped):
-        histogram = self.__histogram(binary_warped)
+        '''
+        Finds the lane on the given binary warped image.
+         - This first determines the search center for both the left and right lines.
+         - Then passes it to line.update for both lines, together with a default margin used when finding lines mostly
+           from scratch.
+         - When the lines updated, it check them so that they are approximately parallel and invalidates them if they
+           are not.
+        :return: the left and right lines
+        '''
+        histogram = self.histogram(binary_warped)
 
         middle = histogram.shape[0] // 2
 
@@ -51,13 +60,26 @@ class LaneFinder:
         return self.__left_line, self.__right_line
 
     def __validate_lines(self):
+        '''
+        Validates lines against each other by checking if they are roughly parallel. The algorithm simply makes sure,
+        that the difference at the middle of the lines is within threshold with difference on top and bottom.
+        :return:
+        '''
         left_fit, right_fit = self.__left_line.fit(), self.__right_line.fit()
-        if abs((left_fit[0] * self.__image_size[0] ** 2 + left_fit[1] * self.__image_size[0]) -
-                (right_fit[0] * self.__image_size[0] ** 2 + right_fit[1] * self.__image_size[0])) > 120:
+        diff_bottom = abs((left_fit[0] * self.__image_size[0] ** 2 + left_fit[1] * self.__image_size[0] + left_fit[2]) -
+                          (right_fit[0] * self.__image_size[0] ** 2 + right_fit[1] * self.__image_size[0] + right_fit[2]))
+        middle = self.__image_size[0] // 2
+        diff_middle = abs((left_fit[0] * middle ** 2 + left_fit[1] * middle + left_fit[2]) -
+                          (right_fit[0] * middle ** 2 + right_fit[1] * middle + right_fit[2]))
+        diff_top = abs(left_fit[2] - right_fit[2])
+        if abs(diff_top - diff_middle > 80) or (diff_bottom - diff_middle > 80):
             self.__left_line.set_valid(False)
             self.__right_line.set_valid(False)
 
     def calculate_position(self):
+        '''
+        Calculates the position of the car in the road. This is basically the difference from the left lane.
+        '''
         left_fit, right_fit = self.__left_line.fit(), self.__right_line.fit()
         if left_fit is None or right_fit is None:
             return 0

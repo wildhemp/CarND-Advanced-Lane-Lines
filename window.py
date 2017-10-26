@@ -73,13 +73,6 @@ class Window:
 
         point_indices = ((nonzeros_x >= self.__x_start) & (nonzeros_x < self.__x_start + self.width) &
                          (nonzeros_y >= self.y_start) & (nonzeros_y < self.y_start + self.height)).nonzero()[0]
-        # noise_indices = ((nonzeros_x >= self.__search_center - self.width) &
-        #                  (nonzeros_x < self.__search_center + self.width) &
-        #                  (nonzeros_y >= self.y_start) & (nonzeros_y < self.y_start + self.height)).nonzero()[0]
-
-        # if len(noise_indices) > 0 and len(point_indices) / len(noise_indices) < .55:
-        #     self.set_valid(False)
-        #     return
 
         self.__window_points = (nonzeros_x[point_indices], nonzeros_y[point_indices])
         self.__validate()

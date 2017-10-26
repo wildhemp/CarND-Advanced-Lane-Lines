@@ -8,6 +8,8 @@ import os
 import vizutils
 from moviepy.editor import VideoFileClip
 import functools
+import matplotlib.pyplot as plt
+
 
 
 def test_calibrated_camera(camera):
@@ -22,7 +24,10 @@ def test_calibrated_camera(camera):
 
 
 def test_perspective_coordinates():
-    perspective_source = ((598, 448), (685, 448), (1020, 664), (296, 664))
+    '''
+    Tests perspective coordinates displaying the polygon on the image then warping it.
+    '''
+    perspective_source = ((584, 458), (701, 458), (1022, 665), (295, 665))
     camera = Camera(9, 6, perspective_source=perspective_source)
     camera.calibrate()
     test_images = ['test_images/straight_lines2.jpg', 'test_images/test5.jpg']
@@ -41,7 +46,7 @@ def test_perspective_coordinates():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def process_image(camera, thresholder, lane_finder, image):
+def process_image(camera, thresholder, lane_finder, image, plot_histogram=False, debug_text=False):
     '''
     Finds the lane lines and the lane and produces an image which has the original image overalyed with the lane and the
     lane lines and also having the bords eye view and threshold images added as a pip.
@@ -57,6 +62,11 @@ def process_image(camera, thresholder, lane_finder, image):
 
     binary = thresholder.threshold(undistorted)
     binary_warped = camera.warp(binary)
+
+    if plot_histogram:
+        histogram = lane_finder.histogram(binary_warped)
+        plt.plot(histogram)
+        plt.show()
 
     left_line, right_line = lane_finder.find_lanes(binary_warped)
     left_coors, right_coors = left_line.line_overlay_coordinates(), right_line.line_overlay_coordinates()
@@ -76,10 +86,12 @@ def process_image(camera, thresholder, lane_finder, image):
                                           image.shape[1] - 200, text_start_y + 30)
     img_overlayed = vizutils.overlay_text(img_overlayed, '{:>1.2f}m'.format(position),
                                           image.shape[1] // 2 - 50, image.shape[0] - 20)
-    # img_overlayed = vizutils.overlay_text(img_overlayed, left_line.debug_text(),
-    #                                       10, text_start_y + 70)
-    # img_overlayed = vizutils.overlay_text(img_overlayed, right_line.debug_text(),
-    #                                       10, text_start_y + 110)
+
+    if debug_text:
+        img_overlayed = vizutils.overlay_text(img_overlayed, left_line.debug_text(),
+                                              10, text_start_y + 70)
+        img_overlayed = vizutils.overlay_text(img_overlayed, right_line.debug_text(),
+                                              10, text_start_y + 110)
 
     warped_overlayed = cv2.resize(warped_overlayed, (0, 0), fx=.3, fy=.3)
     binary_resized = cv2.resize(np.dstack((binary, binary, binary)), (0, 0), fx=.3, fy=.3)
@@ -97,6 +109,9 @@ def process_image(camera, thresholder, lane_finder, image):
 
 
 def process_test_images(camera, threshold, path='./test_images', show_images=False):
+    '''
+    Runs the whole pipeline on test images found on a given path (be it an image or a directory).
+    '''
     images = {}
     if os.path.isdir(path):
         for f in os.listdir(path):
@@ -117,6 +132,11 @@ def process_test_images(camera, threshold, path='./test_images', show_images=Fal
 
 
 def process_video_image(camera, threshold, lane_finder, image):
+    '''
+    Processes an image from the video. First it converts the image to BGR from RGB, because that's what the pipeline
+    uses.
+    :return: The processed image.
+    '''
     return cv2.cvtColor(process_image(
         camera,
         threshold,
@@ -126,6 +146,9 @@ def process_video_image(camera, threshold, lane_finder, image):
 
 
 def process_video(input_path, output_path, start, end):
+    '''
+    Runs the pipeline on every frame of a video and then combines it back into a video.
+    '''
     camera = Camera(9, 6)
     camera.calibrate()
     threshold = Threshold()
@@ -137,6 +160,14 @@ def process_video(input_path, output_path, start, end):
 
 
 def save_debug_video_frames(input_path, output_path, start, end, fps):
+    '''
+    Saves the video frame for debugging purposes.
+    :param input_path: the input video path
+    :param output_path: the output directory to save the frames to
+    :param start: the start position in the video, can be float
+    :param end: the end position in the video, can be float
+    :param fps: the fps to use, i.e. save 10 images per second, etc.
+    '''
     clip1 = VideoFileClip(input_path)
     if end is None: end = clip1.end
     for frame in range(int(start * fps), int(end * fps)):
@@ -168,14 +199,16 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_camera', action='store_true')
-    parser.add_argument('--test_warp', action='store_true')
-    parser.add_argument('--images', type=str)
-    parser.add_argument('--video', type=str, nargs=2)
-    parser.add_argument('--start', type=float)
-    parser.add_argument('--end', type=float)
-    parser.add_argument('--fps', type=int, default=10)
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--test_camera', action='store_true', description='Tests camera calibration')
+    parser.add_argument('--test_warp', action='store_true', description='Tests warping of the image')
+    parser.add_argument('--images', type=str, description='Runs the pipeline on the images found at the given path')
+    parser.add_argument('--video', type=str, nargs=2,
+                        description = 'Runs the pipeline on the given video and saves it to the output path. If debug is'
+                                      ' set, instead of running the pipeline, it saves the frames of the video.')
+    parser.add_argument('--start', type=float, description='Start position in the video.')
+    parser.add_argument('--end', type=float, description='End position in the video.')
+    parser.add_argument('--fps', type=int, default=10, description='The fps to save frames from the video in.')
+    parser.add_argument('--debug', action='store_true', description='Whether to debug the current process or not.')
     args = parser.parse_args()
 
     main(args)

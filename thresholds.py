@@ -1,11 +1,17 @@
 import numpy as np
 import cv2
-from itertools import product
 
 
 class Threshold:
+    '''
+    Class to threshold the image and convert it to binary in a way, that lane lines remain visible and become easily
+    recognizable.
+    '''
 
     def __abs_sobel(self, sobel, sobel_thresh):
+        '''
+        Gets the absolute value of the threshold, scales it and returns a binary image after applying the threshold.
+        '''
         abs_sobel = np.absolute(sobel)  # Absolute x derivative to accentuate lines away from horizontal
         scaled_sobel = np.uint8(255 * abs_sobel / np.max(abs_sobel))
 
@@ -14,6 +20,16 @@ class Threshold:
         return s_binary
 
     def __color(self, image):
+        '''
+        Applies an adaptive color threshold on the image. This takes into account various channels of the image in
+        various color spaces, to best be able to detect lines.
+        The adaptivity is needed in order to make it work with different light conditions, ie. shadows, more/less sunny
+        days, etc.
+        This is quite slow, because it tries different threshold values on different channels and compares the average
+        number of points remaining after thresholding against a chose value. It tries to push the binary image below
+        that value but as close to it as possible.
+        :return: The thresholded binary image.
+        '''
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
         luv = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
@@ -33,11 +49,6 @@ class Threshold:
                 binary[(clahe.apply(luv[:, :, 2]) > 160 + step * steps[2])] = 1
                 binary[(clahe.apply(hls[:, :, 2]) > 50) & (hls[:, :, 1] > 120 + step * steps[3])] = 1
 
-                # score = np.average(np.sum(binary[binary.shape[0] // 2:, :], axis=0))
-                # if 25 > score > best_score:
-                #     best_score = score
-                #     best_binary = binary
-                #     break
                 score_1 = np.average(np.sum(binary[binary.shape[0] // 2:binary.shape[0] // 4 * 3, :], axis=0))
                 score_2 = np.average(np.sum(binary[binary.shape[0] // 4 * 3:, :], axis=0))
                 if 19 > score_1 and 19 > score_2 and score_1 + score_2 > best_score:
@@ -48,6 +59,9 @@ class Threshold:
         return binary if best_binary is None else best_binary
 
     def threshold(self, image):
+        '''
+        Combines a color and a sobel threshold to convert the image to binary.
+        '''
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         sobel_y = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=9)
 
@@ -55,7 +69,7 @@ class Threshold:
         color_binary = self.__color(image)
 
         combined = np.copy(color_binary)
-        combined[(grady == 1)] += 1
+        combined[(grady == 1)] = 1
 
         return np.uint8(combined * 255)
 
