@@ -203,7 +203,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_warp', action='store_true', help='Tests warping of the image')
     parser.add_argument('--images', type=str, help='Runs the pipeline on the images found at the given path')
     parser.add_argument('--video', type=str, nargs=2,
-                        description = 'Runs the pipeline on the given video and saves it to the output path. If debug is'
+                        help='Runs the pipeline on the given video and saves it to the output path. If debug is'
                                       ' set, instead of running the pipeline, it saves the frames of the video.')
     parser.add_argument('--start', type=float, help='Start position in the video.')
     parser.add_argument('--end', type=float, help='End position in the video.')
