@@ -199,16 +199,16 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_camera', action='store_true', description='Tests camera calibration')
-    parser.add_argument('--test_warp', action='store_true', description='Tests warping of the image')
-    parser.add_argument('--images', type=str, description='Runs the pipeline on the images found at the given path')
+    parser.add_argument('--test_camera', action='store_true', help='Tests camera calibration')
+    parser.add_argument('--test_warp', action='store_true', help='Tests warping of the image')
+    parser.add_argument('--images', type=str, help='Runs the pipeline on the images found at the given path')
     parser.add_argument('--video', type=str, nargs=2,
                         description = 'Runs the pipeline on the given video and saves it to the output path. If debug is'
                                       ' set, instead of running the pipeline, it saves the frames of the video.')
-    parser.add_argument('--start', type=float, description='Start position in the video.')
-    parser.add_argument('--end', type=float, description='End position in the video.')
-    parser.add_argument('--fps', type=int, default=10, description='The fps to save frames from the video in.')
-    parser.add_argument('--debug', action='store_true', description='Whether to debug the current process or not.')
+    parser.add_argument('--start', type=float, help='Start position in the video.')
+    parser.add_argument('--end', type=float, help='End position in the video.')
+    parser.add_argument('--fps', type=int, default=10, help='The fps to save frames from the video in.')
+    parser.add_argument('--debug', action='store_true', help='Whether to debug the current process or not.')
     args = parser.parse_args()
 
     main(args)
