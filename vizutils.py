@@ -15,7 +15,7 @@ def overlay_lane_lines(image, left_coors, right_coors, line_width=2, overlay_wei
     cv2.polylines(overlay_image, [right_coors], False, (0, 255, 255),
                   thickness=line_width, lineType=cv2.LINE_AA)
 
-    return cv2.addWeighted(out_image, 1, overlay_image, overlay_weight, 0)
+    return cv2.addWeighted(out_image, .7, overlay_image, overlay_weight, 0)
 
 
 def overlay_lane(image, left_coors, right_coors, camera, line_width=60, overlay_weight=0.3):
@@ -45,10 +45,16 @@ def overlay_text(image, text, x, y):
     return out_image
 
 
-def overlay_windows(image, window_pos, camera, overlay_weight=0.3):
+def overlay_windows(image, window_pos, overlay_weight=0.5):
     out_image = __ensure3_channels(image)
     overlay_image = np.zeros_like(out_image)
     for top_left, bottom_right in window_pos:
         overlay_image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]] = (0, 255, 0)
 
-    return cv2.addWeighted(out_image, 1, overlay_image, overlay_weight, 0)
+    return cv2.addWeighted(out_image, .7, overlay_image, overlay_weight, 0)
+
+
+def overlay_perspective_lines(image, perpective_coordinates):
+    overlay_image = np.zeros_like(image)
+    cv2.polylines(overlay_image, [perpective_coordinates], True, [0, 0, 255], thickness=3)
+    return cv2.addWeighted(image, .7 , overlay_image, 1, 0)

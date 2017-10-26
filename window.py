@@ -73,13 +73,13 @@ class Window:
 
         point_indices = ((nonzeros_x >= self.__x_start) & (nonzeros_x < self.__x_start + self.width) &
                          (nonzeros_y >= self.y_start) & (nonzeros_y < self.y_start + self.height)).nonzero()[0]
-        noise_indices = ((nonzeros_x >= self.__search_center - self.width) &
-                         (nonzeros_x < self.__search_center + self.width) &
-                         (nonzeros_y >= self.y_start) & (nonzeros_y < self.y_start + self.height)).nonzero()[0]
+        # noise_indices = ((nonzeros_x >= self.__search_center - self.width) &
+        #                  (nonzeros_x < self.__search_center + self.width) &
+        #                  (nonzeros_y >= self.y_start) & (nonzeros_y < self.y_start + self.height)).nonzero()[0]
 
-        if len(noise_indices) > 0 and len(point_indices) / len(noise_indices) < .55:
-            self.set_valid(False)
-            return
+        # if len(noise_indices) > 0 and len(point_indices) / len(noise_indices) < .55:
+        #     self.set_valid(False)
+        #     return
 
         self.__window_points = (nonzeros_x[point_indices], nonzeros_y[point_indices])
         self.__validate()
@@ -128,7 +128,9 @@ class Window:
 
     def weights(self):
         '''
-        :return: Weights for the
+        :return: Weights for the points. This is 3 times the max number of invalid frames for valid points on the
+            current frame and decreases every time the points are used, since there's no valid ones on the current
+            frame.
         '''
         if self.valid:
             return np.full_like(self.__window_points[0], self.__max_num_invalid_frames * 3)

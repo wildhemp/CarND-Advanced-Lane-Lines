@@ -21,6 +21,26 @@ def test_calibrated_camera(camera):
     cv2.waitKey(0)
 
 
+def test_perspective_coordinates():
+    perspective_source = ((598, 448), (685, 448), (1020, 664), (296, 664))
+    camera = Camera(9, 6, perspective_source=perspective_source)
+    camera.calibrate()
+    test_images = ['test_images/straight_lines2.jpg', 'test_images/test5.jpg']
+    captions = ['Perspective straight lines', 'Perspective curved lines']
+    for i, test_image in enumerate(test_images):
+        image = camera.undistort(cv2.imread(test_image))
+        image = vizutils.overlay_perspective_lines(image, np.array(perspective_source, dtype=np.int32))
+
+        warped = camera.warp(image)
+
+        image = cv2.resize(image, (0, 0), fx=.5, fy=.5)
+        warped = cv2.resize(warped, (0, 0), fx=.5, fy=.5)
+        final = np.concatenate((image, warped), axis=0)
+        cv2.imshow(captions[i], final)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 def process_image(camera, thresholder, lane_finder, image):
     '''
     Finds the lane lines and the lane and produces an image which has the original image overalyed with the lane and the
@@ -44,21 +64,22 @@ def process_image(camera, thresholder, lane_finder, image):
     window_pos = np.concatenate((left_line.window_coordinates(), right_line.window_coordinates()))
 
     warped_overlayed = warped
-    binary_warped_overlayed = vizutils.overlay_windows(binary_warped, window_pos, camera)
+    binary_warped_overlayed = vizutils.overlay_windows(binary_warped, window_pos)
     binary_warped_overlayed = vizutils.overlay_lane_lines(binary_warped_overlayed, left_coors, right_coors)
 
     text_start_y = image.shape[0] // 3
 
     img_overlayed = vizutils.overlay_lane(image, left_coors, right_coors, camera)
-    img_overlayed = vizutils.overlay_text(img_overlayed, 'Curvature = left: {:>4.0f}m right: {:>4.0f}m'
-                                          .format(int(left_line.curvature()), int(right_line.curvature())),
+    img_overlayed = vizutils.overlay_text(img_overlayed, '{:>6}m'.format(int(left_line.curvature())),
                                           10, text_start_y + 30)
-    img_overlayed = vizutils.overlay_text(img_overlayed, 'Position = {:>1.2f}m'.format(position),
-                                          10, text_start_y + 70)
-    img_overlayed = vizutils.overlay_text(img_overlayed, left_line.debug_text(),
-                                          10, text_start_y + 110)
-    img_overlayed = vizutils.overlay_text(img_overlayed, right_line.debug_text(),
-                                          10, text_start_y + 150)
+    img_overlayed = vizutils.overlay_text(img_overlayed, '{:>6}m'.format(int( int(right_line.curvature()))),
+                                          image.shape[1] - 200, text_start_y + 30)
+    img_overlayed = vizutils.overlay_text(img_overlayed, '{:>1.2f}m'.format(position),
+                                          image.shape[1] // 2 - 50, image.shape[0] - 20)
+    # img_overlayed = vizutils.overlay_text(img_overlayed, left_line.debug_text(),
+    #                                       10, text_start_y + 70)
+    # img_overlayed = vizutils.overlay_text(img_overlayed, right_line.debug_text(),
+    #                                       10, text_start_y + 110)
 
     warped_overlayed = cv2.resize(warped_overlayed, (0, 0), fx=.3, fy=.3)
     binary_resized = cv2.resize(np.dstack((binary, binary, binary)), (0, 0), fx=.3, fy=.3)
@@ -123,6 +144,9 @@ def save_debug_video_frames(input_path, output_path, start, end, fps):
 
 
 def main(args):
+    if args.test_warp:
+        test_perspective_coordinates()
+
     if args.test_camera:
         camera = Camera(9, 6)
         camera.calibrate()
@@ -145,6 +169,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_camera', action='store_true')
+    parser.add_argument('--test_warp', action='store_true')
     parser.add_argument('--images', type=str)
     parser.add_argument('--video', type=str, nargs=2)
     parser.add_argument('--start', type=float)

@@ -6,17 +6,18 @@ import cv2
 class Camera:
 
     def __init__(self, nx, ny,
-                 lane_coordinates=((584, 458), (701, 458), (295, 665), (1022, 665)),
-                 # lane_coordinates=((584, 474), (701, 474), (295, 665), (1022, 665)),
+                 perspective_source=((598, 448), (685, 448), (1020, 664), (296, 664)),
+                 # perspective_source=((584, 474), (701, 474), (1022, 665), (295, 665)),
                  path='./camera_cal'):
         self.nx = nx
         self.ny = ny
         self.path = path
 
-        self.lane_source_coordinates = np.float32(lane_coordinates)
+        self.perspective_source = np.float32(((perspective_source[0]), (perspective_source[1]),
+                                              (perspective_source[3]), (perspective_source[2])))
 
-        self.camera_matrix = None
-        self.distortion_coefficient = None
+        self.__camera_matrix = None
+        self.__distortion_coefficients = None
 
     def calibrate(self):
         print('Calibrating camera...')
@@ -39,24 +40,30 @@ class Camera:
                 image_points.append(corners)
                 object_points.append(objp)
 
-        _, self.camera_matrix, self.distortion_coefficient, _, _ = cv2.calibrateCamera(
+        _, self.__camera_matrix, self.__distortion_coefficients, _, _ = cv2.calibrateCamera(
             object_points, image_points, gray.shape[::-1], None, None)
 
     def undistort(self, image):
-        return cv2.undistort(image, self.camera_matrix, self.distortion_coefficient)
+        return cv2.undistort(image, self.__camera_matrix, self.__distortion_coefficients) \
+            if self.__camera_matrix is not None \
+            else image
 
     def warp(self, image):
-        _, _, bottom_left, bottom_right = self.lane_source_coordinates
+        _, _, bottom_left, bottom_right = self.perspective_source
         image_height, image_width = image.shape[0:2]
-        lane_dest_coordinates = np.float32([(bottom_left[0], 0), (bottom_right[0], 0),
-                                            (bottom_left[0], image_height - 20), (bottom_right[0], image_height - 20)])
-        M = cv2.getPerspectiveTransform(self.lane_source_coordinates, lane_dest_coordinates)
+        offset = 20
+        lane_dest_coordinates = np.float32([(bottom_left[0] + offset, 0), (bottom_right[0] - offset, 0),
+                                            (bottom_left[0] + offset, image_height - offset),
+                                            (bottom_right[0] - offset, image_height - offset)])
+        M = cv2.getPerspectiveTransform(self.perspective_source, lane_dest_coordinates)
         return cv2.warpPerspective(image, M, (image_width, image_height))
 
     def unwarp(self, image):
-        _, _, bottom_left, bottom_right = self.lane_source_coordinates
+        _, _, bottom_left, bottom_right = self.perspective_source
         image_height, image_width = image.shape[0:2]
-        lane_dest_coordinates = np.float32([(bottom_left[0], 0), (bottom_right[0], 0),
-                                            (bottom_left[0], image_height - 20), (bottom_right[0], image_height - 20)])
-        M = cv2.getPerspectiveTransform(lane_dest_coordinates, self.lane_source_coordinates)
+        offset = 20
+        lane_dest_coordinates = np.float32([(bottom_left[0] + offset, 0), (bottom_right[0] - offset, 0),
+                                            (bottom_left[0] + offset, image_height - offset),
+                                            (bottom_right[0] - offset, image_height - offset)])
+        M = cv2.getPerspectiveTransform(lane_dest_coordinates, self.perspective_source)
         return cv2.warpPerspective(image, M, (image_width, image_height))

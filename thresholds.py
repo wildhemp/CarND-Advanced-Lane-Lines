@@ -45,7 +45,6 @@ class Threshold:
                     best_binary = binary
                     break
 
-
         return binary if best_binary is None else best_binary
 
     def threshold(self, image):

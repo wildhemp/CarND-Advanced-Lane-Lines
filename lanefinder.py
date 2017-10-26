@@ -46,10 +46,19 @@ class LaneFinder:
         self.__left_line.update(binary_warped, left_search_center, self.__margin)
         self.__right_line.update(binary_warped, right_search_center, self.__margin)
 
+        self.__validate_lines()
+
         return self.__left_line, self.__right_line
 
+    def __validate_lines(self):
+        left_fit, right_fit = self.__left_line.fit(), self.__right_line.fit()
+        if abs((left_fit[0] * self.__image_size[0] ** 2 + left_fit[1] * self.__image_size[0]) -
+                (right_fit[0] * self.__image_size[0] ** 2 + right_fit[1] * self.__image_size[0])) > 120:
+            self.__left_line.set_valid(False)
+            self.__right_line.set_valid(False)
+
     def calculate_position(self):
-        left_fit, right_fit = self.__left_line.curr_fit, self.__right_line.curr_fit
+        left_fit, right_fit = self.__left_line.fit(), self.__right_line.fit()
         if left_fit is None or right_fit is None:
             return 0
 
@@ -57,6 +66,4 @@ class LaneFinder:
                              left_fit[1] * (self.__image_size[0] - 1) + left_fit[2])
         right = (right_fit[0] * (self.__image_size[0] - 1) ** 2 +
                               right_fit[1] * (self.__image_size[0] - 1) + right_fit[2])
-        # lane_middle_pos = (right_line_pos_x - left_line_pos_x) / 2
         return np.interp(self.__image_size[1] / 2, [left, right], [0, 1]) * 3.7
-        # return (640 - lane_middle_pos) * self.__xm_per_pix
