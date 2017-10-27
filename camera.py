@@ -10,8 +10,7 @@ class Camera:
 
     def __init__(self, nx, ny,
                  # perspective_source=((584, 458), (701, 458), (1022, 665), (295, 665)),
-                 # perspective_source=((584, 474), (701, 474), (1022, 665), (295, 665)),
-                 perspective_source=((584, 458), (701, 458), (1022, 665), (295, 665)),
+                 perspective_source=((584, 474), (701, 474), (1022, 665), (295, 665)),
                  path='./camera_cal'):
         '''
         Initializes the camera.

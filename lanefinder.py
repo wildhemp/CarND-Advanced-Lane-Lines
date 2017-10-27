@@ -66,6 +66,9 @@ class LaneFinder:
         :return:
         '''
         left_fit, right_fit = self.__left_line.fit(), self.__right_line.fit()
+        if left_fit is None or right_fit is None:
+            return
+
         diff_bottom = abs((left_fit[0] * self.__image_size[0] ** 2 + left_fit[1] * self.__image_size[0] + left_fit[2]) -
                           (right_fit[0] * self.__image_size[0] ** 2 + right_fit[1] * self.__image_size[0] + right_fit[2]))
         middle = self.__image_size[0] // 2

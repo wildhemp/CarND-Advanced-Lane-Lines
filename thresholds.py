@@ -51,7 +51,7 @@ class Threshold:
 
                 score_1 = np.average(np.sum(binary[binary.shape[0] // 2:binary.shape[0] // 4 * 3, :], axis=0))
                 score_2 = np.average(np.sum(binary[binary.shape[0] // 4 * 3:, :], axis=0))
-                if 19 > score_1 and 19 > score_2 and score_1 + score_2 > best_score:
+                if 18 > score_1 and 18 > score_2 and score_1 + score_2 > best_score:
                     best_score = score_1 + score_2
                     best_binary = binary
                     break
@@ -93,20 +93,26 @@ def show_color_channels(path):
     cv2.imshow('HLS + HSV + LUV + LAB', np.dstack((img, img, img)))
 
 
-def test_threshold_values(path):
-    test_image = cv2.resize(cv2.imread(path), (0, 0), fx=1., fy=1.)
+def test_threshold_values(path, title):
+    image = cv2.imread(path)
+    test_image = cv2.resize(image, (0, 0), fx=1., fy=1.)
 
     binary = Threshold().threshold(test_image)
     histogram = np.sum(binary, axis=0)
     print(np.average(histogram))
 
-    cv2.imshow('Color threshold', np.dstack((binary, binary, binary)))
+    cv2.imshow(title,
+               np.concatenate((cv2.resize(image, (0, 0), fx=1. / 3., fy=1. / 3.),
+                               cv2.resize(np.dstack((binary, binary, binary)), (0, 0), fx = 1./3., fy=1./3.)), axis=1))
 
 
 if __name__ == '__main__':
-    # path = './test_images/test1.jpg'
-    path = './debug_images_2/frame147.png'
-    show_color_channels(path)
-    test_threshold_values(path)
+    path = './test_images/test6.jpg'
+    test_threshold_values(path, 'Less sunlight')
+    path = './debug_images/frame53.png'
+    test_threshold_values(path, "More sunlight")
+    path = './debug_images/frame46.png'
+    test_threshold_values(path, "Partial shade ")
+    # show_color_channels(path)
     cv2.waitKey(0)
 

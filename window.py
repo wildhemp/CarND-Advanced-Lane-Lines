@@ -25,7 +25,8 @@ class Window:
         self.__num_invalid_frames = 0
         self.__window_layer = np.ones(self.width)
         self.__window_points = None
-        self.__last_valid_window_points = (np.array([], dtype=np.int64), np.array([], dtype=np.int64))
+        self.__empty_window_points = (np.array([], dtype=np.int64), np.array([], dtype=np.int64))
+        self.__last_valid_window_points = self.__empty_window_points
         self.__last_valid_x_start = None
         self.__search_center = None
         self.__last_search_center = None
@@ -91,6 +92,10 @@ class Window:
         self.skip = ((not self.valid and len(self.__last_valid_window_points[0]) == 0) or
                      self.__num_invalid_frames >= self.__max_num_invalid_frames)
 
+    def force_skip(self):
+        self.__last_valid_window_points = self.__empty_window_points
+        self.skip = True
+
     def __validate(self):
         '''
         Validates the window points and sets the windows validity based on that.
@@ -117,7 +122,7 @@ class Window:
         elif self.__num_invalid_frames < self.__max_num_invalid_frames:
             return self.__last_valid_window_points
         else:
-            return (np.array([], dtype=np.int64), np.array([], dtype=np.int64))
+            return self.__empty_window_points
 
     def weights(self):
         '''

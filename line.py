@@ -82,12 +82,13 @@ class Line:
         self.set_valid(self.__is_valid_line() and self.__is_valid_poly())
 
     def set_valid(self, is_valid):
+        if is_valid:
+            self.__num_invalid_frames = 0
+
         if is_valid == (self.__curr_fit is not None):
             return
 
-        if is_valid:
-            self.__num_invalid_frames = 0
-        else:
+        if not is_valid:
             self.__curr_fit = None
             self.__num_invalid_frames += 1
 
@@ -100,18 +101,23 @@ class Line:
         if prev_fit is not None:
             # Invalidates windows which are too far from the previous good fit.
             for i, window in enumerate(self.__windows):
-                if window.valid:
-                    points = window.points()
-                    y_center = window.y_start + window.height // 2
-                    prev_line = prev_fit[0] * (y_center**2) + prev_fit[1] * y_center + prev_fit[2]
-                    margins = np.int32([prev_line - window.width, prev_line + window.width])
-                    inliers = points[0][((points[0] >= margins[0]) & (points[0] < margins[1]))]
-                    if i == 0:
-                        self.__debug_text += 'm:{},{},{},{},{},{}'.format(
-                            margins[0], margins[1],len(inliers), len(points[0]), np.min(points[0]), np.max(points[0]))
-                    if len(inliers) / len(points[0]) < .8:
-                        self.__debug_text += ' iw: %d '% i
+                points = window.points()
+                y_center = window.y_start + window.height // 2
+                prev_line = prev_fit[0] * (y_center ** 2) + prev_fit[1] * y_center + prev_fit[2]
+                margins = np.int32([prev_line - window.width, prev_line + window.width])
+                inliers = points[0][((points[0] >= margins[0]) & (points[0] < margins[1]))]
+                if len(points[0]) == 0:
+                    continue
+
+                if i == 0:
+                    self.__debug_text += 'm:{},{},{},{},{},{}'.format(
+                        margins[0], margins[1], len(inliers), len(points[0]), np.min(points[0]), np.max(points[0]))
+                if len(inliers) / len(points[0]) < .7:
+                    self.__debug_text += ' iw: %d ' % i
+                    if window.valid:
                         window.set_valid(False)
+                    else:
+                        window.force_skip()
 
     def __is_valid_poly(self):
         '''
