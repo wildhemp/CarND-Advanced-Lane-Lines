@@ -51,7 +51,7 @@ class Threshold:
 
                 score_1 = np.average(np.sum(binary[binary.shape[0] // 2:binary.shape[0] // 4 * 3, :], axis=0))
                 score_2 = np.average(np.sum(binary[binary.shape[0] // 4 * 3:, :], axis=0))
-                if 18 > score_1 and 18 > score_2 and score_1 + score_2 > best_score:
+                if 13 > score_1 and 13 > score_2 and score_1 + score_2 > best_score:
                     best_score = score_1 + score_2
                     best_binary = binary
                     break

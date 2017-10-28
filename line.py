@@ -104,7 +104,7 @@ class Line:
                 points = window.points()
                 y_center = window.y_start + window.height // 2
                 prev_line = prev_fit[0] * (y_center ** 2) + prev_fit[1] * y_center + prev_fit[2]
-                margins = np.int32([prev_line - window.width, prev_line + window.width])
+                margins = np.int32([prev_line - 100, prev_line + 100])
                 inliers = points[0][((points[0] >= margins[0]) & (points[0] < margins[1]))]
                 if len(points[0]) == 0:
                     continue
@@ -129,7 +129,7 @@ class Line:
         if prev_fit is not None and current_fit is not None:
             self.__debug_text += 'Fit Diff: {:>.6f}'.format(
                 np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)))
-            if np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)) > .0005:
+            if np.sqrt(np.sum((prev_fit[0:1] - current_fit[0:1]) ** 2)) > .0006:
                 self.__debug_text += ' Skipping frame'
                 return False
 
@@ -155,7 +155,7 @@ class Line:
             fit = self.__curr_fit
             prev_fit = self.__prev_fit()
             if prev_fit is not None:
-                fit = np.mean((fit, prev_fit), axis=0)
+                fit = .9 * fit + .1 * prev_fit
         else: fit = self.__last_valid_fit
         y_coors = np.linspace(0, self.__image_size[0] - 1, self.__image_size[0])
         x_coors = None

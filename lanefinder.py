@@ -69,13 +69,18 @@ class LaneFinder:
         if left_fit is None or right_fit is None:
             return
 
-        diff_bottom = abs((left_fit[0] * self.__image_size[0] ** 2 + left_fit[1] * self.__image_size[0] + left_fit[2]) -
-                          (right_fit[0] * self.__image_size[0] ** 2 + right_fit[1] * self.__image_size[0] + right_fit[2]))
+        # diff_bottom = abs((left_fit[0] * self.__image_size[0] ** 2 + left_fit[1] * self.__image_size[0] + left_fit[2]) -
+        #                   (right_fit[0] * self.__image_size[0] ** 2 + right_fit[1] * self.__image_size[0] + right_fit[2]))
         middle = self.__image_size[0] // 2
-        diff_middle = abs((left_fit[0] * middle ** 2 + left_fit[1] * middle + left_fit[2]) -
-                          (right_fit[0] * middle ** 2 + right_fit[1] * middle + right_fit[2]))
-        diff_top = abs(left_fit[2] - right_fit[2])
-        if abs(diff_top - diff_middle > 80) or (diff_bottom - diff_middle > 80):
+        # diff_middle = abs((left_fit[0] * middle ** 2 + left_fit[1] * middle + left_fit[2]) -
+        #                   (right_fit[0] * middle ** 2 + right_fit[1] * middle + right_fit[2]))
+        # diff_top = abs(left_fit[2] - right_fit[2])
+        left_x_middle = left_fit[0] * middle ** 2 + left_fit[1] * middle + left_fit[2]
+        right_x_middle = right_fit[0] * middle ** 2 + right_fit[1] * middle + right_fit[2]
+        # if abs(diff_top - diff_middle > 120) or (diff_bottom - diff_middle > 120):
+        left_slope = abs(-middle / (left_x_middle - left_fit[2]))
+        right_slope = abs(-middle / (right_x_middle - right_fit[2]))
+        if  .9 < (left_slope / right_slope) < 1.1:
             self.__left_line.set_valid(False)
             self.__right_line.set_valid(False)
 
@@ -91,4 +96,4 @@ class LaneFinder:
                              left_fit[1] * (self.__image_size[0] - 1) + left_fit[2])
         right = (right_fit[0] * (self.__image_size[0] - 1) ** 2 +
                               right_fit[1] * (self.__image_size[0] - 1) + right_fit[2])
-        return np.interp(self.__image_size[1] / 2, [left, right], [0, 1]) * 3.7
+        return np.interp(self.__image_size[1] / 2, [left, right], [0, 1]) * 3.7 - 1.85

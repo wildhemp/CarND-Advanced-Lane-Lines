@@ -83,15 +83,15 @@ def process_image(camera, thresholder, lane_finder, image, plot_histogram=False,
     if display_debug_images:
         cv2.imshow('Fit lines', cv2.resize(binary_warped_overlayed, (0, 0), fx=.5, fy=.5))
 
-    text_start_y = image.shape[0] // 3
+    text_start_y = undistorted.shape[0] // 3
 
-    img_overlayed = vizutils.overlay_lane(image, left_coors, right_coors, camera)
+    img_overlayed = vizutils.overlay_lane(undistorted, left_coors, right_coors, camera)
     img_overlayed = vizutils.overlay_text(img_overlayed, '{:>6}m'.format(int(left_line.curvature())),
                                           10, text_start_y + 30)
-    img_overlayed = vizutils.overlay_text(img_overlayed, '{:>6}m'.format(int( int(right_line.curvature()))),
-                                          image.shape[1] - 200, text_start_y + 30)
+    img_overlayed = vizutils.overlay_text(img_overlayed, '{:>6}m'.format(int(right_line.curvature())),
+                                          undistorted.shape[1] - 200, text_start_y + 30)
     img_overlayed = vizutils.overlay_text(img_overlayed, '{:>1.2f}m'.format(position),
-                                          image.shape[1] // 2 - 50, image.shape[0] - 20)
+                                          undistorted.shape[1] // 2 - 50, undistorted.shape[0] - 20)
 
     if debug_text:
         img_overlayed = vizutils.overlay_text(img_overlayed, left_line.debug_text(),

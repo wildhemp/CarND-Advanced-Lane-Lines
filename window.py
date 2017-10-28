@@ -57,8 +57,8 @@ class Window:
             self.__last_search_center = self.__search_center
 
         if self.valid:
-            x_start = max(0, self.__x_start + self.width // 2 - self.width)
-            x_end = min(self.__image_width, self.__x_start + self.width // 2 + self.width)
+            x_start = max(0, self.__x_start + self.width // 2 - 100)
+            x_end = min(self.__image_width, self.__x_start + self.width // 2 + 100)
         else:
             x_start = max(0, x_search_center_when_invalid - search_margin_when_invalid)
             x_end = min(self.__image_width, x_search_center_when_invalid + search_margin_when_invalid)
