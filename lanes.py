@@ -48,7 +48,7 @@ def test_perspective_coordinates():
     cv2.destroyAllWindows()
 
 def process_image(camera, thresholder, lane_finder, image, plot_histogram=False, debug_text=False,
-                  display_binary_overlayed=False):
+                  display_debug_images=False):
     '''
     Finds the lane lines and the lane and produces an image which has the original image overalyed with the lane and the
     lane lines and also having the bords eye view and threshold images added as a pip.
@@ -61,6 +61,8 @@ def process_image(camera, thresholder, lane_finder, image, plot_histogram=False,
     '''
     undistorted = camera.undistort(image)
     warped = camera.warp(undistorted)
+    if display_debug_images:
+        cv2.imshow('Undistorted', cv2.resize(undistorted, (0, 0), fx=.5, fy=.5))
 
     binary = thresholder.threshold(undistorted)
     binary_warped = camera.warp(binary)
@@ -78,7 +80,7 @@ def process_image(camera, thresholder, lane_finder, image, plot_histogram=False,
     warped_overlayed = warped
     binary_warped_overlayed = vizutils.overlay_windows(binary_warped, window_pos)
     binary_warped_overlayed = vizutils.overlay_lane_lines(binary_warped_overlayed, left_coors, right_coors)
-    if display_binary_overlayed:
+    if display_debug_images:
         cv2.imshow('Fit lines', cv2.resize(binary_warped_overlayed, (0, 0), fx=.5, fy=.5))
 
     text_start_y = image.shape[0] // 3
